@@ -1,0 +1,453 @@
+<DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Game of life</title>
+	
+	<style>
+
+
+
+	</style>
+
+	<script type="text/javascript" src="traffic.js"></script>
+
+	<script>
+	/**
+	Triangle up
+		c---- p1 --------
+		|    /\	        |
+		|	/  \        |
+		|  /    \       h
+		| /      \      |
+		|/        \     |
+		p2__________p3 --
+		|	  	    |
+		-----a------
+
+	Triangle down
+		c		   
+		p1_________p2 --
+		|\	      /    |
+		| \      /     |
+		|  \    /      h
+		|   \  /	   |
+		|    \/        |
+		-----p3 --------
+
+	*/
+	/*function modAbs(x, y) {
+		return (x + y) % y;
+	}
+
+
+	class Triangle {
+		constructor(grid, column, row, value = 0) {
+			this.grid = grid;
+			this.ctx = grid.ctx;
+			this.column = column;
+			this.row = row;
+			this.isUp = (column + row) % 2 == 0;
+			this.drawText = false;
+
+			this.constructPoints();
+			this.constructNeighbours();
+			this.setValue(value);
+		}
+
+		constructPoints() {
+			if (this.isUp) { 
+				// p1
+				this.x1 = this.grid.a * (this.column / 2. + 0.5);
+				this.y1 = this.grid.h * this.row;
+				
+				// p2
+				this.x2 = this.grid.a * this.column / 2.;
+				this.y2 = this.grid.h * (this.row + 1.);
+				
+				// p3
+				this.x3 = this.grid.a * (this.column / 2. + 1.);
+				this.y3 = this.grid.h * (this.row + 1.);
+			} else { 
+				// p1
+				this.x1 = this.grid.a * this.column / 2.;
+				this.y1 = this.grid.h * this.row;
+				
+				// p2
+				this.x2 = this.grid.a * (this.column / 2. + 1.);
+				this.y2 = this.grid.h * this.row;
+				
+				// p3
+				this.x3 = this.grid.a * (this.column / 2. + 0.5);
+				this.y3 = this.grid.h * (this.row + 1.);
+			}
+
+			this.xc = this.grid.a * (this.column / 2. + 0.5);
+			this.yc = this.grid.h * (this.row + 0.5);
+		}
+
+		constructNeighbours() {
+			/*
+
+			Traingle is ip:
+					0
+				1   /\ 	 2
+			4		3		 5
+
+			Is Down:
+			4		0        5
+				1   \/   2
+			    	3   
+
+			*//*
+			this.neighbours = new Array(6);
+			for (var i = 0; i < this.neighbours.length; i++) 
+				this.neighbours[i] = new Array(2);
+
+			this.neighbours[0][0] = this.column;
+			this.neighbours[0][1] = modAbs(this.row - 1,  this.grid.rowResoulution);
+
+			this.neighbours[1][0] = modAbs(this.column - 1, this.grid.columnResoulution);
+			this.neighbours[1][1] = this.row;
+			
+			this.neighbours[2][0] = (this.column + 1) % this.grid.columnResoulution;
+			this.neighbours[2][1] = this.row;
+			
+			this.neighbours[3][0] = this.column;
+			this.neighbours[3][1] = (this.row + 1) % this.grid.rowResoulution;
+
+			this.neighbours[4][0] = modAbs(this.column - 2, this.grid.columnResoulution);
+			this.neighbours[5][0] = (this.column + 2) % this.grid.columnResoulution;
+
+
+			if (this.isUp) {
+				this.neighbours[4][1] = (this.row + 1) % this.grid.rowResoulution;
+				this.neighbours[5][1] = (this.row + 1) % this.grid.rowResoulution;
+			} else {
+				this.neighbours[4][1] = modAbs(this.row - 1, this.grid.rowResoulution);
+				this.neighbours[5][1] = modAbs(this.row - 1, this.grid.rowResoulution);
+			}
+		}
+
+		drawTraingle() {
+			this.ctx.beginPath();
+			this.ctx.fillStyle = this.fillColor;
+			this.ctx.moveTo(this.x1, this.y1);
+			this.ctx.lineTo(this.x2, this.y2);
+			this.ctx.lineTo(this.x3, this.y3);
+			this.ctx.fill();
+			this.ctx.lineTo(this.x1, this.y1);
+			this.ctx.strokeStyle = '#999999';
+			this.ctx.lineWidth = 0.5;
+			this.ctx.stroke();
+
+			if (this.drawText) {
+				this.ctx.font = "10px Arial";
+				this.ctx.fillStyle = this.textColor;
+				this.ctx.textAlign = "center";
+				const alive = this.countAliveNeighbours().toString();
+				this.ctx.fillText(alive, this.xc, this.yc + this.grid.h * 0.1);
+			}
+		}
+
+		setValue(value) {
+			this.value = value;
+			this.fillColor = value ? '#000000' : '#EEEEEE';
+			this.textColor = value ? '#EEEEEE' : '#000000';
+		}
+
+		countAliveNeighbours() {
+			var count = 0;
+
+			for (var i = 0; i < this.neighbours.length; i++) {
+				const column = this.neighbours[i][0];
+				const row = this.neighbours[i][1];
+				count += this.grid.state[row][column].value;
+			}
+
+			return count;
+		}
+	}
+
+	class TriangleGrid {
+
+		constructor(gridElement, initDensity, gridColumnResolution, gridRowResolution, rules) {	
+			this.gridElement = gridElement;
+			this.ctx = gridElement.getContext('2d');
+			this.density = initDensity;
+			this.columnResoulution = gridColumnResolution;
+			this.rowResoulution = gridRowResolution;
+			this.elementCount = gridColumnResolution * gridRowResolution
+			this.rules = rules;
+			this.iteration = 0;
+			this.a = 2 * gridElement.width / (gridColumnResolution + 1);
+			this.h = gridElement.height / gridRowResolution;
+
+			this.constructTraingles();
+		}
+
+		constructTraingles() {
+			const self = this;
+			this.state = new Array(this.rowResoulution);
+			for (var row = 0; row < this.state.length; row++) {
+				this.state[row] = new Array(this.columnResoulution);
+				for (var column = 0; column < this.state[row].length; column++) {
+					const value = Math.random() < this.density;
+					this.state[row][column] = new Triangle(self, column, row, value);
+				}
+			}
+		}
+
+		drawTraingles() {
+			this.ctx.fillStyle = '#EEEEEE'
+			this.ctx.fillRect(0, 0, this.gridElement.width, this.gridElement.height);
+			for (var row = 0; row < this.state.length; row++) {
+				for (var column = 0; column < this.state[row].length; column++) {
+					this.state[row][column].drawTraingle();
+				}
+			}
+		}
+
+		countAliveTriangles() {
+			var count = 0;
+			
+			for (var row = 0; row < this.state.length; row++) {
+				for (var column = 0; column < this.state[row].length; column++) {
+					count += this.state[row][column].value;
+				}
+			}
+
+			return count;
+		}
+
+		countDensity() {
+			return this.countAliveTriangles() / this.elementCount;
+		}
+
+		performStep() {
+			// calculate values
+			// console.log(this.rules)
+			for (var row = 0; row < this.state.length; row++) {
+				for (var column = 0; column < this.state[row].length; column++) {
+					const triangle = this.state[row][column]
+					const alive = triangle.value;
+					const countAlive = triangle.countAliveNeighbours();
+
+					const inStay = this.rules.stay.includes(countAlive)
+					const inBorn = this.rules.born.includes(countAlive)
+
+					
+					// console.log('A', alive, 'C', countAlive, 'Stay', inStay, 'Born', inBorn);
+
+					if (!alive && inBorn) {  // alive
+						triangle.nextValue = true;
+						// console.log('born')
+					} else if (alive && !inStay){  // dead
+						triangle.nextValue = false;
+						// console.log('die')
+					} else {
+						triangle.nextValue = alive;
+						// console.log('stay')
+					}
+					// console.log('Next', triangle.nextValue)
+
+
+				}
+			}
+
+			// setting values
+			for (var row = 0; row < this.state.length; row++) {
+				for (var column = 0; column < this.state[row].length; column++) {
+					const nextValue = this.state[row][column].nextValue;
+					this.state[row][column].setValue(nextValue);
+				}
+			}
+
+			this.iteration += 1;
+		}
+
+		setDebug(debug) {
+			for (var row = 0; row < this.state.length; row++) {
+				for (var column = 0; column < this.state[row].length; column++) {
+					this.state[row][column].drawText = debug;
+				}
+			}
+		}
+	}
+
+	class History {
+
+		constructor(limit) {
+			this.limit = limit;
+			this.values = []
+            this.iteration = 0;
+		}
+
+		push(value) {
+			if (this.values.length >= this.limit)
+				this.values.shift();
+			this.values.push(value);
+            this.iteration += 1;
+		}
+
+		get(index) {
+			return this.values[index];
+		}
+
+		get lenght() {
+			return this.values.length
+		}
+	}
+
+	class Chart {
+
+		constructor(chartElement, history) {
+			this.chartElement = chartElement;
+			this.ctx = chartElement.getContext('2d');
+			this.history = history;
+			this.margin = 30;
+			this.width = chartElement.width - 2 * this.margin;
+			this.height = chartElement.height - 2 * this.margin;
+			this.barWidth = this.width / history.limit;
+
+			this.ctx.fillStyle = '#FFFFFF'
+			this.ctx.fillRect(0, 0, chartElement.width, chartElement.height);
+            this.ctx.fillStyle = '#000000'
+			this.ctx.strokeStyle = '#000000'
+			this.ctx.strokeRect(this.margin, this.margin, this.width, this.height);
+            this.ctx.fillText('100%', 0, this.margin);
+            this.ctx.fillText('0%', 0, this.margin + this.height);
+		}
+
+		drawChart() {
+			this.ctx.fillStyle = '#EEEEEE'
+			this.ctx.fillRect(this.margin, this.margin, this.width, this.height);
+			this.ctx.fillStyle = '#000000'
+			
+			for(let i = 0; i < this.history.lenght; i++) {
+				const density = this.history.get(i);
+				
+				const barHeight = density * (1 - this.height);
+				const x = i * this.barWidth + this.margin;
+				this.ctx.fillRect(x, this.height + this.margin, this.barWidth, barHeight);
+			}
+            const firstHist = Math.max(0, this.history.iteration - this.history.limit);
+            const lastHist = firstHist + this.history.limit;
+
+            this.ctx.fillStyle = '#FFFFFF'
+            this.ctx.fillRect(this.margin, this.margin + this.height + 1, this.width + this.margin, this.margin);
+            this.ctx.fillStyle = '#000000'
+            this.ctx.fillText(firstHist, this.margin, this.margin * 1.5 + this.height);
+            this.ctx.fillText(lastHist, this.width + this.margin / 2, this.margin * 1.5 + this.height);
+
+		}
+
+	}
+
+	class LifeAnimation {
+
+		constructor(grid, history, chart, density, iteration, delay) {
+			this.grid = grid;
+			this.history = history;
+			this.chart = chart;
+			this.delay = delay;
+			this.density = density;
+			this.iteration = iteration;
+			this.isPlaying = false;
+
+			grid.drawTraingles();
+			chart.drawChart();
+		}
+
+		nextStep() {
+			this.grid.performStep();
+			const density = this.grid.countDensity();
+            this.history.push(density);
+			this.density.innerHTML = "Density[%]: " + density * 100;
+			this.iteration.innerHTML = "Iteration: " + (this.grid.iteration + 1);
+            this.draw();
+		}
+
+        draw() {
+            this.chart.drawChart();
+			this.grid.drawTraingles();
+        }
+
+		animate() {
+			clearInterval(this.interval);
+			this.interval = setInterval(() => {
+				if (this.isPlaying) {
+					this.nextStep();
+				} else {
+					clearInterval(this.interval);
+				}
+			}, this.delay);
+		}
+
+		start() {
+			this.isPlaying = true;
+			this.animate();
+		}
+
+		stop() {
+			this.isPlaying = false;
+		}
+
+		setDelay(delay) {
+			this.delay = delay
+			if (this.isPlaying) {
+				this.animate()
+			}
+		}
+
+		setDebug(debug) {
+			this.grid.setDebug(debug);
+			this.grid.drawTraingles();
+		}
+	}
+
+	function calculateRules(stay, born) {
+		return {
+			stay: stay.split(',').map(s => parseInt(s, 10)),
+			born: born.split(',').map(s => parseInt(s, 10)),
+		};
+	}
+
+	function sizeChange() {
+		const gridElement = document.getElementById('grid');
+		const chartElement = document.getElementById('chart')
+		const inputSizeElement = document.getElementById('input_size');
+		const size = inputSizeElement.value;
+		gridElement.height = size;
+		gridElement.width = size;
+		chartElement.height = size;
+		chartElement.width = size;
+
+        const startPauseElement = document.getElementById('start_pause');
+		const animation = startPauseElement.animation;
+        if (animation) {
+            animation.draw();
+        }
+	}*/
+
+
+	function onLoad() {
+
+		
+	}
+
+	window.onload = onLoad
+
+	</script>
+    
+</head>
+<body>
+
+    
+	<div id="content">
+		<canvas id="grid" width="500" height="500"></canvas> 
+	</div>
+
+	
+
+</body>
