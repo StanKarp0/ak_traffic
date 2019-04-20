@@ -52,9 +52,10 @@ class CrossingEntry {
 // =============== GENERAL PARTS ===============
 
 class Road {
-    constructor(next_crossing_entry, road_parts_count) {
+    constructor(next_crossing_entry, road_parts_count, direction) {
         this.next_crossing_entry = next_crossing_entry;
         this.road_parts_count = road_parts_count;
+        this.direction = direction;
 
         this.parts = [new RoadPart(next_crossing_entry)];
         this.parts[0].i = 0;
@@ -116,52 +117,56 @@ class Facade {
     }
 
     has_car_road_part(road_index, road_part_index) {
-        return this.roads[road_index].has_car_road_part(road_part_index);
+        return this._roads[road_index].has_car_road_part(road_part_index);
     }
 
     has_car_crossing(crossing_row, crossing_column) {
-        return this.crossings[crossing_row][crossing_column].has_car();
+        return this._crossings[crossing_row][crossing_column].has_car();
     }
 
     get_road_index(crossing_row, crossing_column, direction) {
-        const crossing = this.crossings[crossing_row][crossing_column];
+        const crossing = this._crossings[crossing_row][crossing_column];
         const road = direction == DIRECTION_NS ? crossing.next_road_ns : crossing.next_road_ew;  
-        return this.roads.indexOf(road);
+        return this._roads.indexOf(road);
+    }
+
+    get_road_direction(road_index) {
+        return this._roads[road_index].direction;
     }
 
     _constructCrossings() {
         // Function construct crossings as 2d grid 
 
-        this.crossings = new Array(this.crossings_count_ns);
-        for (let row = 0; row < this.crossings.length; row++) {
-            this.crossings[row] = new Array(this.crossings_count_ew);
-            for (let column = 0; column < this.crossings[row].length; column++) {
-                this.crossings[row][column] = new Crossing(DIRECTION_NS);
+        this._crossings = new Array(this.crossings_count_ns);
+        for (let row = 0; row < this._crossings.length; row++) {
+            this._crossings[row] = new Array(this.crossings_count_ew);
+            for (let column = 0; column < this._crossings[row].length; column++) {
+                this._crossings[row][column] = new Crossing(DIRECTION_NS);
             }
         }
     }
 
     _constructRoads() {
         // Roads
-        this.roads = [];
+        this._roads = [];
         
         // NORTH-SOUTH roads
-        const rows =  this.crossings.length
-        for (let row = 0; row < this.crossings.length; row++) {
-            for (let column = 0; column < this.crossings[row].length; column++) {
-                const road = new Road(this.crossings[(row + 1) % rows][column].crossing_entry_ns, this.road_parts_count);
-                this.crossings[row][column].next_road_ns = road;
-                this.roads.push(road);
+        const rows =  this._crossings.length
+        for (let row = 0; row < this._crossings.length; row++) {
+            for (let column = 0; column < this._crossings[row].length; column++) {
+                const road = new Road(this._crossings[(row + 1) % rows][column].crossing_entry_ns, this.road_parts_count, DIRECTION_NS);
+                this._crossings[row][column].next_road_ns = road;
+                this._roads.push(road);
             }
         }
 
         // EAST-WEST roads
-        for (let row = 0; row < this.crossings.length; row++) {
-            const columns = this.crossings[row].length
+        for (let row = 0; row < this._crossings.length; row++) {
+            const columns = this._crossings[row].length
             for (let column = 0; column < columns; column++) {
-                const road = new Road(this.crossings[row][(column + 1) % columns].crossing_entry_ew, this.road_parts_count);
-                this.crossings[row][column].next_road_ew = road;
-                this.roads.push(road);
+                const road = new Road(this._crossings[row][(column + 1) % columns].crossing_entry_ew, this.road_parts_count, DIRECTION_EW);
+                this._crossings[row][column].next_road_ew = road;
+                this._roads.push(road);
             }
         }
 
@@ -170,19 +175,19 @@ class Facade {
     _addCars() {
         // Dictionary to check if car was placed in road before
         const positions = {};
-        for (let road_index = 0; road_index < this.roads.length; road_index++) 
+        for (let road_index = 0; road_index < this._roads.length; road_index++) 
             positions[road_index] = [];
 
-        this.cars = [];
-        while (this.cars.length < this.cars_count) {
-            const road_index = Math.floor(Math.random() * this.roads.length); 
-            const part_index = Math.floor(Math.random() * this.roads[road_index].road_parts_count);
+        this._cars = [];
+        while (this._cars.length < this.cars_count) {
+            const road_index = Math.floor(Math.random() * this._roads.length); 
+            const part_index = Math.floor(Math.random() * this._roads[road_index].road_parts_count);
             if (!positions[road_index].includes(part_index)) {
                 const velocity = 1.;
                 const car = new Car(velocity);
-                this.roads[road_index].set_car(part_index, car);
+                this._roads[road_index].set_car(part_index, car);
                 positions[road_index].push(part_index);
-                this.cars.push(car);
+                this._cars.push(car);
             }
         }
     }
