@@ -70,6 +70,10 @@ class Road {
         return this.parts[part_index].has_car()
     }
 
+    get_car_road_part(part_index) {
+        return this.parts[part_index].car;
+    }
+
     set_car(part_index, car) {
         this.parts[part_index].car = car;
         car.place = this.parts[part_index];
@@ -95,6 +99,10 @@ class Crossing {
         return this.car != null; 
     }
 
+    get_car() {
+        return this.car;
+    }
+
     set_car(car) {
         this.car = car;
     }
@@ -116,12 +124,14 @@ class Facade {
         this._addCars();
     }
 
-    has_car_road_part(road_index, road_part_index) {
-        return this._roads[road_index].has_car_road_part(road_part_index);
+    get_car_road_part(road_index, road_part_index) {
+        const car = this._roads[road_index].get_car_road_part(road_part_index);
+        return car != null ? this._cars.indexOf(car) : null;
     }
 
-    has_car_crossing(crossing_row, crossing_column) {
-        return this._crossings[crossing_row][crossing_column].has_car();
+    get_car_crossing(crossing_row, crossing_column) {
+        const car = this._crossings[crossing_row][crossing_column].get_car();
+        return car != null ? this._cars.indexOf(car) : null;
     }
 
     get_road_index(crossing_row, crossing_column, direction) {

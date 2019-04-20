@@ -8,13 +8,17 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<script type="text/javascript" src="traffic.js"></script>
 	<script type="text/javascript" src="view.js"></script>
-
+	<script type="text/javascript" src="controller.js"></script>
 
 	<script>
 
 	function onLoad() {
-		const facade = new Facade(3, 3, 30, 50);
+		const facade = new Facade(2, 2, 30, 50);
 		const view = new View(facade, "#grid")
+		const controller = new Controller(facade, view);
+		
+		const controllerElement = document.getElementById('controller');
+		controllerElement.controller = controller;
 	}
 
 	window.onload = onLoad
@@ -25,6 +29,11 @@
 <body>
     
 	<div id="grid"></div>
+	<div id="controller">
+
+		
+
+	</div>
 
 
 </body>

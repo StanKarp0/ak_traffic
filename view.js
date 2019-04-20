@@ -2,7 +2,7 @@ class View {
 
     constructor(facade, grid_name) {
         // constans
-        this.img_size = 900;
+        this.img_size = 600;
         this.click = 0;
 
         // components
@@ -22,7 +22,13 @@ class View {
         this.margin_count = Math.floor(this.p_count / 2);
 
         d3.select(grid_name).html("");
-        this._refresh_data();
+        this._data = this._calculate_data();
+        this._data_array = [];
+        for (let key in this._data) {
+            const box = this._data[key];
+            box.car = key;
+            this._data_array.push(box);
+        }
         
         var grid = d3.select(grid_name)
             .append("svg")
@@ -33,7 +39,7 @@ class View {
 
 
         var column = grid.selectAll(".square")
-            .data(this._data)
+            .data(this._data_array)
             .enter().append("rect")
             .attr("class","square")
             .attr("x", function(d) { return d.x; })
@@ -45,27 +51,31 @@ class View {
             .on('click', function(d) {});
     }
     
-    _refresh_data() {
-        this._data = [];
-        for (let row = 0; row < this.ew_count; row++) {
-            for (let column = 0; column < this.ns_count; column++) {
+    _calculate_data() {
+        var data = {};
+        for (let row = 0; row < this.ns_count; row++) {
+            for (let column = 0; column < this.ew_count; column++) {
 
-                if (this.facade.has_car_crossing(row, column)) 
-                    this._data.push(this._point_from_crossing(row, column));
+                const crossing_car = this.facade.get_car_crossing(row, column)
+                if (crossing_car != null) 
+                    data[crossing_car] = this._point_from_crossing(row, column);
 
                 const road_ns = this.facade.get_road_index(row, column, DIRECTION_NS);
                 const road_ew = this.facade.get_road_index(row, column, DIRECTION_EW);
 
                 for(let part = 0; part < this.p_count; part++) {
-
-                    if (this.facade.has_car_road_part(road_ns, part)) 
-                        this._data.push(this._point_from_road(row, column, road_ns, part));
-                    if (this.facade.has_car_road_part(road_ew, part)) 
-                        this._data.push(this._point_from_road(row, column, road_ew, part));
                     
+                    const ns_car = this.facade.get_car_road_part(road_ns, part);
+                    if (ns_car != null) 
+                        data[ns_car] = this._point_from_road(row, column, road_ns, part);
+
+                    const ew_car = this.facade.get_car_road_part(road_ew, part);
+                    if (ew_car != null) 
+                        data[ew_car] = this._point_from_road(row, column, road_ew, part);                    
                 }
             }
         }
+        return data;
     }
 
     _point_from_crossing(row, column) {
