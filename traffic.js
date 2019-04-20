@@ -1,50 +1,54 @@
 const DIRECTION_NS = 1;
 const DIRECTION_EW = 2;
-
+const SIDE_NORTH = 1;
+const SIDE_SOUTH = 2;
+const SIDE_EAST = 3;
+const SIDE_WEST = 4;
 
 class Car {
-
     constructor(velocity) {
         this.velocity = velocity;
         this.place = null;
-        this.next_place = null;
     }
-
 }
 
 class RoadPart {
-
     constructor(next_part) {
         this.next_part = next_part;
         this.car = null;
     }
 
     count_empty() {
-        return this.car != null ? 0 : this.next_part.count_empty() + 1;
-    }
-
-}
-
-class Path {
-
-    constructor(next_crossing_entry, d) {
-        this.next_crossing_entry = next_crossing_entry;
-        this.d = d;
-
-        this.roads = [new Road(next_crossing_entry)];
-        for (let i = 1; i < d; i++) {
-            this.roads.push(new Road(this.roads[0]));
-        }
+        return this.next_part.is_empty() ? this.next_part.count_empty() + 1: 0;
     }
 
     is_empty() {
-        return this.roads[0].taken;
+        return this.cat == null;
+    }
+}
+
+class Road {
+    constructor(next_crossing_entry, road_parts_count) {
+        this.next_crossing_entry = next_crossing_entry;
+        this.road_parts_count = road_parts_count;
+
+        this.parts = [new RoadPart(next_crossing_entry)];
+        this.parts[0].i = 0;
+        for (let i = 1; i < road_parts_count; i++) {
+            const part = new RoadPart(this.parts[i - 1]);
+            part.i = i;
+            this.parts.push(part);
+        }
     }
 
-    taken(index) {
-        return this.roads[index].taken;
+    count_empty() {
+        return this.parts[0].count_empty();
     }
 
+    set_car(part_index, car) {
+        this.parts[part_index].car = car;
+        car.place = this.parts[part_index];
+    }
 }
 
 
@@ -56,11 +60,10 @@ class CrossingEntry {
     }
 
     is_empty() {
-        if (this.direction == DIRECTION_EW) {
+        if (this.direction == DIRECTION_EW) 
             return this.crossing.is_empty_ew();
-        } else if (this.direction == DIRECTION_NS) {
+        else if (this.direction == DIRECTION_NS) 
             return this.crossing.is_empty_ns();
-        }
         return false;
     }
 
@@ -92,44 +95,84 @@ class Crossing {
 
 class Facade {
 
-    constructor(n, d) {
+    constructor(crossings_count_ns, crossings_count_ew, road_parts_count, cars_count) {
 
-        this.n = n;
-        this.d = d;
+        this.crossings_count_ew = crossings_count_ew;
+        this.crossings_count_ns = crossings_count_ns;
+        this.road_parts_count = road_parts_count;
+        this.cars_count = cars_count;
 
-        this.constructCrossings();
-
+        this._constructCrossings();
+        this._constructRoads();
+        this._addCars();
     }
 
-    constructCrossings() {
-        this.crossings = new Array(this.n);
+    is_empty_road_part(road_index, road_part_index) {
+        return true;
+    }
+
+    is_empty_crossing(crossing_index) {
+        return true;
+    }
+
+    // get_road_index(crossing_index, )
+
+    _constructCrossings() {
+        // Function construct crossings as 2d grid 
+
+        this.crossings = new Array(this.crossings_count_ns);
         for (let row = 0; row < this.crossings.length; row++) {
-            this.crossings[row] = new Array(this.n);
+            this.crossings[row] = new Array(this.crossings_count_ew);
             for (let column = 0; column < this.crossings[row].length; column++) {
                 this.crossings[row][column] = new Crossing(DIRECTION_NS);
             }
         }
+    }
 
-        this.paths = [];
+    _constructRoads() {
+        // Roads
+        this.roads = [];
         
+        // NORTH-SOUTH roads
+        const rows =  this.crossings.length
         for (let row = 0; row < this.crossings.length; row++) {
-            for (let column = 0; column < this.crossings[row].length - 1; column++) {
-                const path = new Path(this.crossings[row][column + 1].crossing_entry_ew);
-                this.crossings[row][column].next_road_ew = path;
-                this.paths.push(path);
-            }
-            this.crossings[row][this.n - 1].next_road_ew = this.crossing[row][0].crossing_entry_ew;
-        }
-
-        for (let row = 0; row < this.crossings.length - 1; row++) {
             for (let column = 0; column < this.crossings[row].length; column++) {
-                const path = new Path(this.crossings[row + 1][column].crossing_entry_ns);
-                this.crossings[row][column].next_road_ns = path;
-                this.paths.push(path);
+                const road = new Road(this.crossings[(row + 1) % rows][column].crossing_entry_ns, this.road_parts_count);
+                this.crossings[row][column].next_road_ns = road;
+                this.roads.push(road);
             }
-            this.crossings[row][this.n - 1].next_road_ew = this.crossing[row][0].crossing_entry_ew;
         }
 
+        // EAST-WEST roads
+        for (let row = 0; row < this.crossings.length; row++) {
+            const columns = this.crossings[row].length
+            for (let column = 0; column < columns; column++) {
+                const road = new Road(this.crossings[row][(column + 1) % columns].crossing_entry_ew, this.road_parts_count);
+                this.crossings[row][column].next_road_ew = road;
+                this.roads.push(road);
+            }
+        }
+
+    }
+
+    _addCars() {
+        // Dictionary to check if car was placed in road before
+        const positions = {};
+        for (let road_index = 0; road_index < this.roads.length; road_index++) 
+            positions[road_index] = [];
+
+        this.cars = [];
+        while (this.cars.length < this.cars_count) {
+            const road_index = Math.floor(Math.random() * this.roads.length); 
+            const part_index = Math.floor(Math.random() * this.roads[road_index].road_parts_count);
+            if (!positions[road_index].includes(part_index)) {
+                const velocity = 1.;
+                const car = new Car(velocity);
+                this.roads[road_index].set_car(part_index, car);
+                positions[road_index].push(part_index);
+                this.cars.push(car);
+            }
+        }
     }
 
 }
