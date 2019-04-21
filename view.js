@@ -20,18 +20,11 @@ class View {
 
         // left and right margins - when counts are odd
         this.margin_count = Math.floor(this.p_count / 2);
-    }
 
-    draw_cars() {
+        // background data
+        this._backgroud = this._calculate_background_data();
+
         d3.select(this.grid_name).html("");
-        this._data = this._calculate_data();
-        this._data_array = [];
-        for (let key in this._data) {
-            const box = this._data[key];
-            box.car = key;
-            this._data_array.push(box);
-        }
-        
         this._grid = d3.select(this.grid_name)
             .append("svg")
             .attr("width", this.img_size +"px")
@@ -39,18 +32,45 @@ class View {
             .style("display", "block")
             .style("margin", "auto");
 
+        const self = this;
 
-        this._squares = this._grid.selectAll(".square")
+        // background data
+        this._back = this._grid.selectAll(".square_empty")
+            .data(this._backgroud)
+            .enter().append("rect")
+            .attr("class","square_empty")
+            .attr("x", function(d) { return d.x * self.box_width; })
+            .attr("y", function(d) { return d.y * self.box_height; })
+            .attr("width", this.box_width)
+            .attr("height", this.box_height);
+
+        // car data
+        this._data_array = [];
+        for (let car = 0; car < facade.cars_lenght(); car++) {
+            this._data_array.push({car: car});
+        }
+        this._cars = this._grid.selectAll(".square_car")
             .data(this._data_array)
             .enter().append("rect")
-            .attr("class","square")
-            .attr("x", function(d) { return d.x; })
-            .attr("y", function(d) { return d.y; })
-            .attr("width", function(d) { return d.width; })
-            .attr("height", function(d) { return d.height; })
-            .style("fill", function(d) { return d.fill; })
-            .style("stroke", "#000000")
-            .on('click', function(d) {});
+            .attr("class","square_car")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", this.box_width)
+            .attr("height", this.box_height)
+            .attr("id", function(d) {return "car" + d.car;});
+    }
+
+    draw_cars() {
+        const data = this._calculate_data();
+        for (let key in data) {
+            const box = data[key];
+            const key_id = "#car" + key;
+
+            const car = this._grid.select(key_id)
+                .attr("x", box.x * this.box_width)
+                .attr("y", box.y * this.box_height)
+
+        }
     }
     
     _calculate_data() {
@@ -80,19 +100,32 @@ class View {
         return data;
     }
 
+    _calculate_background_data() {
+        const data = [];
+        const fill = "#ffffff"
+        for (let row = 0; row < this.ns_count; row++) {
+            for (let column = 0; column < this.ew_count; column++) {
+
+                data.push(this._point_from_crossing(row, column, fill));
+
+                const road_ns = this.facade.get_road_index(row, column, DIRECTION_NS);
+                const road_ew = this.facade.get_road_index(row, column, DIRECTION_EW);
+
+                for(let part = 0; part < this.p_count; part++) {
+                    data.push(this._point_from_road(row, column, road_ns, part, fill));
+                    data.push(this._point_from_road(row, column, road_ew, part, fill));                    
+                }
+            }
+        }
+        return data;
+    }
+
     _point_from_crossing(row, column) {
         const x_box = (this.margin_count + (1 + this.p_count) * column) % this.columns_count;
         const y_box = (this.margin_count + (1 + this.p_count) * row) % this.rows_count;
         return {
-            x: x_box * this.box_width,
-            y: y_box * this.box_height,
-            x_box: x_box,
-            y_box: y_box,
-            width: this.box_width,
-            height: this.box_height, 
-            click: this.click,
-            v: 1,
-            fill: "#aabbcc",
+            x: x_box,
+            y: y_box,
         };
     }
 
@@ -103,11 +136,8 @@ class View {
         const shift_ns = direction == DIRECTION_NS ? 0 : (this.p_count - part);
         const shift_ew = direction == DIRECTION_EW ? 0 : (this.p_count - part);
 
-        point.x_box = (point.x_box + shift_ns) % this.columns_count;
-        point.y_box = (point.y_box + shift_ew) % this.rows_count;
-
-        point.x = point.x_box * this.box_width;
-        point.y = point.y_box * this.box_height;
+        point.x = (point.x + shift_ns) % this.columns_count;
+        point.y = (point.y + shift_ew) % this.rows_count;
 
         return point;
     }

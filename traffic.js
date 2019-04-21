@@ -11,6 +11,7 @@ class Car {
 
     step() {
         const self = this;
+        // console.log(this.place, this.place.count_to_next_car(), this.place.count_to_crossing());
         this.place.set_next_car(self, this.velocity);
     }
 
@@ -30,14 +31,6 @@ class RoadPart {
         this.next_part = next_part;
     }
 
-    has_car() {
-        return this.car != null;
-    }
-
-    count_empty() {
-        return this.next_part.has_car() ? 0: this.next_part.count_empty() + 1;
-    }
-
     set_next_car(car, step) {
         if (step == 0) {
             this.next_car = car;
@@ -54,6 +47,18 @@ class RoadPart {
             this.next_car = null;
         }
     }
+
+    has_car() {
+        return this.car != null;
+    }
+
+    count_to_next_car() {
+        return this.next_part.has_car() ? 0: this.next_part.count_to_next_car() + 1; 
+    }
+
+    count_to_crossing() {
+        return this.next_part.count_to_crossing() + 1; 
+    }
 }
 
 class CrossingEntry extends RoadPart {
@@ -64,12 +69,8 @@ class CrossingEntry extends RoadPart {
         this.direction = direction;
     }
 
-    count_empty() {
-        if (this.direction != this.crossing.flow_direction) {
-            return 0;
-        } else {
-            return this.next_part.has_car() ? 0: this.next_part.count_empty() + 1;
-        }
+    count_to_crossing() {
+        return -1; 
     }
 }
 
@@ -182,6 +183,10 @@ class Facade {
 
     get_road_direction(road_index) {
         return this._roads[road_index].direction;
+    }
+
+    cars_lenght() {
+        return this._cars.length;
     }
 
     perform_step() {
