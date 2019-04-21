@@ -76,8 +76,9 @@ class CrossingEntry extends RoadPart {
 // =============== GENERAL PARTS ===============
 
 class Road {
-    constructor(road_parts_count) {
+    constructor(road_parts_count, direction) {
         this.parts_count = road_parts_count;
+        this.direction = direction;
 
         // 0 - leave
         // n - enter
@@ -141,12 +142,8 @@ class Crossing {
     }
 
     aprove_step() {
-        this.car = this.next_car;
-        if (this.car) {
-            const self = this;
-            // this.car.place = self;
-            this.next_car = null;
-        }
+        this.crossing_entry_ns.aprove_step();
+        this.crossing_entry_ew.aprove_step();
     }
 }
 
@@ -172,7 +169,8 @@ class Facade {
     }
 
     get_car_crossing(crossing_row, crossing_column) {
-        const car = this._crossings[crossing_row][crossing_column].get_car();
+        const crossing = this._crossings[crossing_row][crossing_column];
+        const car = crossing.get_car();
         return car != null ? this._cars.indexOf(car) : null;
     }
 
@@ -217,11 +215,11 @@ class Facade {
                 this._crossings[row][column].column = column;
                 
                 // road ns
-                const road_ns = new Road(this.road_parts_count);
+                const road_ns = new Road(this.road_parts_count, DIRECTION_NS);
                 this._roads.push(road_ns);
                 
                 // road ew
-                const road_ew = new Road(this.road_parts_count);                
+                const road_ew = new Road(this.road_parts_count, DIRECTION_EW);                
                 this._roads.push(road_ew);
 
                 this._crossings[row][column].init(road_ns, road_ew);

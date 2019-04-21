@@ -99,10 +99,16 @@ class View {
     _point_from_road(row, column, road, part) {
         const point = this._point_from_crossing(row, column);
         const direction = this.facade.get_road_direction(road);
-        point.x_box = (point.x_box + (direction == DIRECTION_NS ? 0 : part)) % this.columns_count;
-        point.y_box = (point.y_box + (direction == DIRECTION_EW ? 0 : part)) % this.rows_count;
+
+        const shift_ns = direction == DIRECTION_NS ? 0 : (this.p_count - part);
+        const shift_ew = direction == DIRECTION_EW ? 0 : (this.p_count - part);
+
+        point.x_box = (point.x_box + shift_ns) % this.columns_count;
+        point.y_box = (point.y_box + shift_ew) % this.rows_count;
+
         point.x = point.x_box * this.box_width;
         point.y = point.y_box * this.box_height;
+
         return point;
     }
 
