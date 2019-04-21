@@ -2,7 +2,7 @@ class View {
 
     constructor(facade, grid_name) {
         // constans
-        this.img_size = 600;
+        this.img_size = 500;
         this.click = 0;
 
         // components

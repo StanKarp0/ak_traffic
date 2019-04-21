@@ -1,16 +1,22 @@
 <DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Game of life</title>
-	
-	<script src="https://d3js.org/d3.v4.min.js"></script>
+	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<script src="https://d3js.org/d3.v4.min.js"></script>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">	
+
 	<script type="text/javascript" src="traffic.js"></script>
 	<script type="text/javascript" src="view.js"></script>
 	<script type="text/javascript" src="controller.js"></script>
-
+	
+    <title>Traffic Simulation</title>
 	<script>
+
+	function setViews() {
+
+	}
 
 	function onLoad() {
 		const facade = new Facade(2, 2, 30, 50);
@@ -19,6 +25,8 @@
 		
 		const controllerElement = document.getElementById('controller');
 		controllerElement.controller = controller;
+
+		setViews();
 	}
 
 	window.onload = onLoad
@@ -27,13 +35,103 @@
     
 </head>
 <body>
-    
-	<div id="grid"></div>
-	<div id="controller">
+	
+	<div class="container">
+		<div class="card">
+			<div class="card-header">Ruch Uliczny</div>
+			<div class="card-body">
+				<div class="row">
+					<div class="col" id="grid"></div>
+				</div>
+			</div>
+		</div>
+		<div class="card">
+			<div class="card-header">Konfiguracja</div>
+			<div class="card-body">
+				<div class="row" id="controller">
+					<div class="col-4 col-md-4 col-sm-12">
 
-		
+						<div class="card">
+							<!-- <div class="card-header">Control</div> -->
+							<div class="card-body">
+								<button type="button" id="reset_btn" class="btn btn-outline-secondary btn-block">Reset</button>
+								<button type="button" id="start_btn" class="btn btn-outline-secondary btn-block">Start</button>
+								<button type="button" id="step_btn" class="btn btn-outline-secondary btn-block">Step</button>
+							</div>
+						</div>
 
+					</div>
+					<div class="col-8 col-md-8 col-sm-12">
+						<div class="card">
+							<div class="card-body">
+								
+								<div class="row">
+									<div class="col-3 col-md-3 col-sm-4">Długość drogi: </div>
+									<div class="col-8 col-md-7 col-sm-5"><input type="range" class="form-control-range" 
+										id="road_lenght" value="20" min="3" max="50" 
+										oninput="road_lenght_output.value = road_lenght.value"></div>
+									<div class="col-1 col-md-2 col-sm-3"><output id="road_lenght_output">20</output></div>
+								</div>
+
+								<div class="row">
+									<div class="col-3 col-md-3 col-sm-4">Pionowych ulic: </div>
+									<div class="col-8 col-md-7 col-sm-5"><input type="range" class="form-control-range" 
+										id="ns_roads" value="2" min="1" max="6" 
+										oninput="ns_roads_output.value = ns_roads.value"></div>
+									<div class="col-1 col-md-2 col-sm-3"><output id="ns_roads_output">2</output></div>
+								</div>
+
+								<div class="row">
+									<div class="col-3 col-md-3 col-sm-4">Poziomych ulic: </div>
+									<div class="col-8 col-md-7 col-sm-5"><input type="range" class="form-control-range" 
+										id="ew_roads" value="2" min="1" max="6" 
+										oninput="ew_roads_output.value = ew_roads.value"></div>
+									<div class="col-1 col-md-2 col-sm-3"><output id="ew_roads_output">2</output></div>
+								</div>
+
+								<div class="row">
+									<div class="col-3 col-md-3 col-sm-4">Gęstość aut: </div>
+									<div class="col-8 col-md-7 col-sm-5"><input type="range" class="form-control-range" 
+										id="density" value="20" min="0" max="100" 
+										oninput="density_output.value = density.value"></div>
+									<div class="col-1 col-md-2 col-sm-3"><output id="density_output">20</output></div>
+								</div>
+
+								<div class="row">
+									<div class="col-3 col-md-3 col-sm-4">P. zwolnienia: </div>
+									<div class="col-8 col-md-7 col-sm-5"><input type="range" class="form-control-range" 
+										id="prob" value="50" min="0" max="100" 
+										oninput="prob_output.value = prob.value"></div>
+									<div class="col-1 col-md-2 col-sm-3"><output id="prob_output">20</output></div>
+								</div>
+
+								<div class="row">
+									<div class="col-3 col-md-3 col-sm-4">Okres świateł: </div>
+									<div class="col-8 col-md-7 col-sm-5"><input type="range" class="form-control-range" 
+										id="lights" value="30" min="1" max="100" 
+										oninput="lights_output.value = lights.value"></div>
+									<div class="col-1 col-md-2 col-sm-3"><output id="lights_output">30</output></div>
+								</div>
+
+								<div class="row">
+									<div class="col-3 col-md-3 col-sm-4">Maks. prędkość: </div>
+									<div class="col-8 col-md-7 col-sm-5"><input type="range" class="form-control-range" 
+										id="max_speed" value="4" min="1" max="10" 
+										oninput="max_speed_output.value = max_speed.value"></div>
+									<div class="col-1 col-md-2 col-sm-3"><output id="max_speed_output">4</output></div>
+								</div>
+
+							</div>
+						</div>	
+					</div>
+				</div>	
+			</div>
+		</div>		
 	</div>
+	
 
-
+	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>	
 </body>
+</html>
