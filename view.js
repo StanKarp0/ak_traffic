@@ -20,8 +20,10 @@ class View {
 
         // left and right margins - when counts are odd
         this.margin_count = Math.floor(this.p_count / 2);
+    }
 
-        d3.select(grid_name).html("");
+    draw_cars() {
+        d3.select(this.grid_name).html("");
         this._data = this._calculate_data();
         this._data_array = [];
         for (let key in this._data) {
@@ -30,7 +32,7 @@ class View {
             this._data_array.push(box);
         }
         
-        var grid = d3.select(grid_name)
+        this._grid = d3.select(this.grid_name)
             .append("svg")
             .attr("width", this.img_size +"px")
             .attr("height", this.img_size +"px")
@@ -38,7 +40,7 @@ class View {
             .style("margin", "auto");
 
 
-        var column = grid.selectAll(".square")
+        this._squares = this._grid.selectAll(".square")
             .data(this._data_array)
             .enter().append("rect")
             .attr("class","square")

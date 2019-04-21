@@ -17,8 +17,8 @@ function onLoad() {
     
     // configure new components
     const facade = new Facade(ns_roads, ew_roads, road_lenght, density);
-    const view = new View(facade, "#grid")
-    const controller = new Controller(facade, view);
+    const view = new View(facade, "#grid");
+    const controller = new Controller(facade, view, 200);
     
     startElement.controller = controller;
     startElement.innerHTML = "Start"

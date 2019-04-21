@@ -1,19 +1,21 @@
 class Controller {
 
-    constuctor(facade, view, delay) {
+    constructor(facade, view, delay) {
         this.facade = facade;
         this.view = view;
         this.delay = delay;
 
         this.isPlaying = false;
+        this.draw();
     }
 
     nextStep() {
+        this.facade.perform_step();
         this.draw();
     }
 
     draw() {
-
+        this.view.draw_cars();
     }
 
     animate() {
