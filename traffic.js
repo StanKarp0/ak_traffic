@@ -112,13 +112,13 @@ class Crossing {
 
 class Facade {
 
-    constructor(crossings_count_ns, crossings_count_ew, road_parts_count, cars_count) {
+    constructor(crossings_count_ns, crossings_count_ew, road_parts_count, density) {
 
+        this.car_density = density / 100.0;
         this.crossings_count_ew = crossings_count_ew;
         this.crossings_count_ns = crossings_count_ns;
         this.road_parts_count = road_parts_count;
-        this.cars_count = cars_count;
-
+        
         this._constructCrossings();
         this._constructRoads();
         this._addCars();
@@ -183,21 +183,15 @@ class Facade {
     }
 
     _addCars() {
-        // Dictionary to check if car was placed in road before
-        const positions = {};
-        for (let road_index = 0; road_index < this._roads.length; road_index++) 
-            positions[road_index] = [];
-
         this._cars = [];
-        while (this._cars.length < this.cars_count) {
-            const road_index = Math.floor(Math.random() * this._roads.length); 
-            const part_index = Math.floor(Math.random() * this._roads[road_index].road_parts_count);
-            if (!positions[road_index].includes(part_index)) {
-                const velocity = 1.;
-                const car = new Car(velocity);
-                this._roads[road_index].set_car(part_index, car);
-                positions[road_index].push(part_index);
-                this._cars.push(car);
+        for (let road_index = 0; road_index < this._roads.length; road_index++) {
+            for (let part_index = 0; part_index < this.road_parts_count; part_index++) {
+                if (Math.random() <= this.car_density) {
+                    const velocity = 1.;
+                    const car = new Car(velocity);
+                    this._roads[road_index].set_car(part_index, car);
+                    this._cars.push(car);
+                }
             }
         }
     }

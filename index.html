@@ -10,28 +10,9 @@
 	<script type="text/javascript" src="traffic.js"></script>
 	<script type="text/javascript" src="view.js"></script>
 	<script type="text/javascript" src="controller.js"></script>
+	<script type="text/javascript" src="listeners.js"></script>
 	
     <title>Traffic Simulation</title>
-	<script>
-
-	function setViews() {
-
-	}
-
-	function onLoad() {
-		const facade = new Facade(2, 2, 30, 50);
-		const view = new View(facade, "#grid")
-		const controller = new Controller(facade, view);
-		
-		const controllerElement = document.getElementById('controller');
-		controllerElement.controller = controller;
-
-		setViews();
-	}
-
-	window.onload = onLoad
-
-	</script>
     
 </head>
 <body>
@@ -52,11 +33,10 @@
 					<div class="col-4 col-md-4 col-sm-12">
 
 						<div class="card">
-							<!-- <div class="card-header">Control</div> -->
 							<div class="card-body">
-								<button type="button" id="reset_btn" class="btn btn-outline-secondary btn-block">Reset</button>
-								<button type="button" id="start_btn" class="btn btn-outline-secondary btn-block">Start</button>
-								<button type="button" id="step_btn" class="btn btn-outline-secondary btn-block">Step</button>
+								<button type="button" id="reset_btn" class="btn btn-outline-secondary btn-block" onclick="onLoad()">Reset</button>
+								<button type="button" id="start_btn" class="btn btn-outline-secondary btn-block" onclick="onClickStart()">Start</button>
+								<button type="button" id="step_btn" class="btn btn-outline-secondary btn-block" onclick="onClickStep()">Step</button>
 							</div>
 						</div>
 
