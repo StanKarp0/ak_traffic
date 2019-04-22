@@ -66,7 +66,7 @@ class View {
             .attr("y", function(d) { return d.y * self.box_height; })
             .attr("width", function(d) { return d.w * self.box_width; })
             .attr("height", function(d) { return d.h * self.box_height; })
-            .attr("fill", function(d) { return d.dir ? "#ff0000" : "#00ff00"; })
+            .attr("fill", function(d) { return d.dir ? "#00ff00" : "#ff0000"; })
             .attr("id", function(d) {return d.id;});
     }
 
@@ -85,7 +85,7 @@ class View {
         for (let key in data) {
             const box = data[key];
             this._grid.select("#" + key)
-                .attr("fill", box.dir ? "#ff0000" : "#00ff00")
+                .attr("fill", box.dir ? "#00ff00" : "#ff0000")
 
         }
     }

@@ -11,7 +11,12 @@ class Car {
 
     step() {
         const self = this;
-        // console.log(this.place, this.place.count_to_next_car(), this.place.count_to_crossing());
+
+        const d_car = this.place.count_to_next_car() + 1;
+        const d_crossing = this.place.to_crossing;
+        const is_green = this.place.is_crossing_green();
+
+        console.log(d_car, d_crossing, is_green);
         this.place.set_next_car(self, this.velocity);
     }
 
@@ -25,6 +30,8 @@ class RoadPart {
         this.next_part = null;
         this.car = null;
         this.next_car = null;
+
+        this._cached_is_green = null;
     }
 
     init(next_part) {
@@ -46,6 +53,7 @@ class RoadPart {
             this.car.place = self;
             this.next_car = null;
         }
+        this._cached_is_green = null;
     }
 
     has_car() {
@@ -56,8 +64,11 @@ class RoadPart {
         return this.next_part.has_car() ? 0: this.next_part.count_to_next_car() + 1; 
     }
 
-    count_to_crossing() {
-        return this.next_part.count_to_crossing() + 1; 
+    is_crossing_green() {
+        if (this._cached_is_green == null) {
+            this._cached_is_green = this.next_part.is_crossing_green();
+        }
+        return this._cached_is_green;
     }
 }
 
@@ -67,10 +78,11 @@ class CrossingEntry extends RoadPart {
         super();
         this.crossing = crossing;
         this.direction = direction;
+        this.to_crossing = 0;
     }
 
-    count_to_crossing() {
-        return -1; 
+    is_crossing_green() {
+        return this.direction == this.crossing.flow_direction;
     }
 }
 
@@ -84,12 +96,12 @@ class Road {
         // 0 - leave
         // n - enter
         this.parts = [new RoadPart()];
-        this.parts[0].i = 0;
+        this.parts[0].to_crossing = 1;
 
         for (let i = 1; i < this.parts_count; i++) {
             const part = new RoadPart();
             part.init(this.parts[i - 1]);
-            part.i = i;
+            part.to_crossing = i + 1;
             this.parts.push(part);
         }
     }
