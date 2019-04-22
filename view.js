@@ -15,6 +15,8 @@ class View {
         this.p_count = facade.road_parts_count;
         this.columns_count = (facade.road_parts_count + 1) * this.ew_count;
         this.rows_count = (facade.road_parts_count + 1) * this.ns_count;
+
+        // box config
         this.box_width = this.img_size / (this.columns_count);
         this.box_height = this.img_size / (this.rows_count);
 
@@ -22,21 +24,20 @@ class View {
         this.margin_count = Math.floor(this.p_count / 2);
 
         // background data
-        this._backgroud = this._calculate_background_data();
-
+        
         d3.select(this.grid_name).html("");
         this._grid = d3.select(this.grid_name)
-            .append("svg")
-            .attr("width", this.img_size +"px")
-            .attr("height", this.img_size +"px")
-            .style("display", "block")
-            .style("margin", "auto");
-
+        .append("svg")
+        .attr("width", this.img_size +"px")
+        .attr("height", this.img_size +"px")
+        .style("display", "block")
+        .style("margin", "auto");
+        
         const self = this;
-
+        
         // background data
-        this._back = this._grid.selectAll(".square_empty")
-            .data(this._backgroud)
+        this._grid.selectAll(".square_empty")
+            .data(this._calculate_background_data())
             .enter().append("rect")
             .attr("class","square_empty")
             .attr("x", function(d) { return d.x * self.box_width; })
@@ -45,12 +46,9 @@ class View {
             .attr("height", this.box_height);
 
         // car data
-        this._data_array = [];
-        for (let car = 0; car < facade.cars_lenght(); car++) {
-            this._data_array.push({car: car});
-        }
-        this._cars = this._grid.selectAll(".square_car")
-            .data(this._data_array)
+
+        this._grid.selectAll(".square_car")
+            .data(this._calculate_car_init_data())
             .enter().append("rect")
             .attr("class","square_car")
             .attr("x", 0)
@@ -58,22 +56,49 @@ class View {
             .attr("width", this.box_width)
             .attr("height", this.box_height)
             .attr("id", function(d) {return "car" + d.car;});
+
+        // crossings lights
+        this._grid.selectAll(".lights")
+            .data(this._calculate_lights_init_data())
+            .enter().append("rect")
+            .attr("class","lights")
+            .attr("x", function(d) { return d.x * self.box_width; })
+            .attr("y", function(d) { return d.y * self.box_height; })
+            .attr("width", function(d) { return d.w * self.box_width; })
+            .attr("height", function(d) { return d.h * self.box_height; })
+            .attr("fill", function(d) { return d.dir ? "#ff0000" : "#00ff00"; })
+            .attr("id", function(d) {return d.id;});
     }
 
     draw_cars() {
-        const data = this._calculate_data();
+        const data = this._calculate_car_data();
         for (let key in data) {
             const box = data[key];
-            const key_id = "#car" + key;
-
-            const car = this._grid.select(key_id)
+            this._grid.select("#car" + key)
                 .attr("x", box.x * this.box_width)
                 .attr("y", box.y * this.box_height)
+        }
+    }
+
+    draw_lights() {
+        const data = this._calculate_lights_data();
+        for (let key in data) {
+            const box = data[key];
+            this._grid.select("#" + key)
+                .attr("fill", box.dir ? "#ff0000" : "#00ff00")
 
         }
     }
+
+    _calculate_car_init_data() {
+        const data_cars = [];
+        for (let car = 0; car < this.facade.cars_lenght(); car++) {
+            data_cars.push({car: car});
+        }
+        return data_cars;
+    }
     
-    _calculate_data() {
+    _calculate_car_data() {
         var data = {};
         for (let row = 0; row < this.ns_count; row++) {
             for (let column = 0; column < this.ew_count; column++) {
@@ -120,12 +145,36 @@ class View {
         return data;
     }
 
+    _calculate_lights_init_data() {
+        const data_dict = this._calculate_lights_data();
+        const data_list = [];
+        for (let key in data_dict) {
+            data_list.push(data_dict[key]);
+        }
+        return data_list;
+    }
+
+    _calculate_lights_data() {
+        const data = {};
+        for (let row = 0; row < this.ns_count; row++) {
+            for (let column = 0; column < this.ew_count; column++) {
+                const direction = this.facade.get_crossing_flow(row, column);
+                const point = this._point_from_crossing(row, column);
+                const id = "ligths" + row + "_" + column + "_"; 
+
+                data[id + "n"] = {x: point.x - 1.0, y: point.y - 0.5, dir: direction == DIRECTION_NS, id: id + "n", h: 0.5, w: 1};
+                data[id + "w"] = {x: point.x - 0.5, y: point.y + 1.0, dir: direction == DIRECTION_EW, id: id + "w", h: 1, w: 0.5};
+                data[id + "s"] = {x: point.x + 1.0, y: point.y + 1.0, dir: direction == DIRECTION_NS, id: id + "s", h: 0.5, w: 1};
+                data[id + "e"] = {x: point.x + 1.0, y: point.y - 1.0, dir: direction == DIRECTION_EW, id: id + "e", h: 1, w: 0.5};
+            }
+        }
+        return data;
+    }
+
     _point_from_crossing(row, column) {
-        const x_box = (this.margin_count + (1 + this.p_count) * column) % this.columns_count;
-        const y_box = (this.margin_count + (1 + this.p_count) * row) % this.rows_count;
         return {
-            x: x_box,
-            y: y_box,
+            x: (this.margin_count + (1 + this.p_count) * column) % this.columns_count,
+            y: (this.margin_count + (1 + this.p_count) * row) % this.rows_count,
         };
     }
 

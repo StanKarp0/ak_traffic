@@ -146,6 +146,10 @@ class Crossing {
         this.crossing_entry_ns.aprove_step();
         this.crossing_entry_ew.aprove_step();
     }
+
+    lights_change() {
+        this.flow_direction = this.flow_direction == DIRECTION_NS ? DIRECTION_EW : DIRECTION_NS;
+    }
 }
 
 // =============== FACADE ===============
@@ -185,8 +189,20 @@ class Facade {
         return this._roads[road_index].direction;
     }
 
+    get_crossing_flow(crossing_row, crossing_column) {
+        return this._crossings[crossing_row][crossing_column].flow_direction;
+    }
+
     cars_lenght() {
         return this._cars.length;
+    }
+
+    lights_change() {
+        for (let row = 0; row < this._crossings.length; row++) {
+            for (let column = 0; column < this._crossings[row].length; column++) {
+                this._crossings[row][column].lights_change()
+            }
+        }
     }
 
     perform_step() {
