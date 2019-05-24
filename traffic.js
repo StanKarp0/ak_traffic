@@ -5,19 +5,100 @@ const DIRECTION_EW = 2;
 
 class Car {
     constructor(velocity) {
-        this.velocity = velocity;
+        this.v_n = velocity;
         this.place = null;
     }
 
     step() {
         const self = this;
 
-        const d_car = this.place.count_to_next_car() + 1;
-        const d_crossing = this.place.to_crossing;
+        const d_n = this.place.count_to_next_car() + 1;
+        const s_n = this.place.to_crossing;
+        
         const is_green = this.place.is_crossing_green();
+        const to_red = this.place.to_red_lights();
 
-        console.log(d_car, d_crossing, is_green);
-        this.place.set_next_car(self, this.velocity);
+        // console.log('dn', d_n, 'sn', s_n, 'green', is_green, 't', to_red, 'vn', this.v_n);
+        // console.log(this.place);
+        
+        // ================ PRZYSPIESZENIE =================
+        var v_n_new = this.v_n + 1;
+
+        // ================ ZWALNIANIE =====================
+        if (!is_green) {
+            // ============= CZRWONE =======================
+            const min_d_s = Math.min(d_n, s_n);
+            if (min_d_s <= v_n_new) {
+                v_n_new = min_d_s - 1;
+            }
+
+        } else {
+            // ============= ZIELONE =======================
+            const min_v_d = Math.min(v_n_new, d_n - 1);
+            if (d_n < s_n && d_n < v_n_new) {
+                v_n_new = d_n - 1;
+            } else if (d_n >= s_n && min_v_d * to_red > s_n) {
+                v_n_new = min_v_d;
+            }
+        }
+
+        if (v_n_new == -1) {
+            console.log('v_n', v_n_new);
+            console.log('dn', d_n, 'sn', s_n, 'green', is_green, 't', to_red, 'vn', this.v_n);
+
+            const vn = this.v_n + 1;
+            if (!is_green) {
+                const min_d_s = Math.min(d_n, s_n);
+                console.log(Math.min(d_n, s_n), min_d_s <= vn);
+            } else {
+                const min_v_d = Math.min(vn, d_n - 1);
+                console.log(Math.min(vn, d_n - 1), (d_n < s_n && d_n < vn), (d_n >= s_n && min_v_d * to_red > s_n));
+            }
+        }
+
+        // if (is_green) {
+        //     // =================== GREEN ===================
+        //     const min_v_d = Math.min(this.v_n, d_n - 1);
+        //     console.log('green', min_v_d, this.v_n, d_n - 1);
+
+        //     if (d_n < s_n && d_n <= this.v_n) {
+        //         v_n_new = d_n - 1;
+        //         console.log('green1: ', v_n_new);
+                
+        //     } else if (d_n >= s_n && min_v_d * to_red > s_n) {
+        //         v_n_new = min_v_d;
+        //         console.log('green2: ', v_n_new);
+
+        //     } else {
+        //         // przyspieszenie
+        //         v_n_new += 1;
+        //         console.log('green3: ', v_n_new);
+        //     }
+
+        // } else {
+        //     // ===================== RED =====================
+        //     const min_d_s = Math.min(d_n, s_n);
+        //     console.log('red: ', min_d_s, d_n, s_n, this.v_n);
+        //     if (min_d_s <= this.v_n) {
+        //         // zwolnienie przed światłami
+
+        //         v_n_new = min_d_s - 1;
+        //         console.log('red1: ', v_n_new);
+
+        //     // } else if () {
+
+        //     }
+        //     else {
+        //         // przyspieszenie
+        //         // v_n_new += 1;
+        //         console.log('red2: ', v_n_new);
+        //     }
+
+        // }
+
+        this.v_n = v_n_new;
+        // console.log('v_n', v_n_new);
+        this.place.set_next_car(self, this.v_n);
     }
 
 }
@@ -32,6 +113,7 @@ class RoadPart {
         this.next_car = null;
 
         this._cached_is_green = null;
+        this._cached_to_red_light = null;
     }
 
     init(next_part) {
@@ -54,6 +136,7 @@ class RoadPart {
             this.next_car = null;
         }
         this._cached_is_green = null;
+        this._cached_to_red_light = null;
     }
 
     has_car() {
@@ -70,19 +153,35 @@ class RoadPart {
         }
         return this._cached_is_green;
     }
+
+    to_red_lights() {
+        if (this._cached_to_red_light == null) {
+            this._cached_to_red_light = this.next_part.to_red_lights();
+        }
+        return this._cached_to_red_light;
+    }
 }
 
 class CrossingEntry extends RoadPart {
 
-    constructor(crossing, direction) {
+    constructor(crossing, direction, road_length) {
         super();
         this.crossing = crossing;
         this.direction = direction;
-        this.to_crossing = 0;
+        this.to_crossing = road_length + 1;
     }
 
     is_crossing_green() {
         return this.direction == this.crossing.flow_direction;
+    }
+
+    to_red_lights() {
+        if (this.direction == DIRECTION_NS) {
+            return this.crossing.remain_to_red_ns;
+        } else if (this.direction == DIRECTION_EW){
+            return this.crossing.remain_to_red_ew;
+        }
+        return 0;
     }
 }
 
@@ -134,11 +233,13 @@ class Road {
 
 class Crossing {
 
-    constructor(flow_direction) {
+    constructor(flow_direction, road_length) {
         const self = this;
         this.flow_direction = flow_direction;
-        this.crossing_entry_ns = new CrossingEntry(self, DIRECTION_NS);
-        this.crossing_entry_ew = new CrossingEntry(self, DIRECTION_EW);
+        this.crossing_entry_ns = new CrossingEntry(self, DIRECTION_NS, road_length);
+        this.crossing_entry_ew = new CrossingEntry(self, DIRECTION_EW, road_length);
+        this.remain_to_red_ns = 0; // TODO here warning
+        this.remain_to_red_ew = 0;
     }
 
     init(next_road_ns, next_road_ew) {
@@ -161,6 +262,16 @@ class Crossing {
 
     lights_change() {
         this.flow_direction = this.flow_direction == DIRECTION_NS ? DIRECTION_EW : DIRECTION_NS;
+    }
+
+    to_lights_change(remain) {
+        if (this.flow_direction == DIRECTION_NS) {
+            this.remain_to_red_ns = remain;
+            this.remain_to_red_ew = 0;
+        } else {
+            this.remain_to_red_ns = 0;
+            this.remain_to_red_ew = remain;
+        }
     }
 }
 
@@ -217,6 +328,14 @@ class Facade {
         }
     }
 
+    to_lights_change(remain) {
+        for (let row = 0; row < this._crossings.length; row++) {
+            for (let column = 0; column < this._crossings[row].length; column++) {
+                this._crossings[row][column].to_lights_change(remain)
+            }
+        }
+    }
+
     perform_step() {
         for (let car_id = 0; car_id < this._cars.length; car_id++) {
             this._cars[car_id].step();
@@ -243,7 +362,7 @@ class Facade {
             this._crossings[row] = new Array(this.crossings_count_ew);
             for (let column = 0; column < this._crossings[row].length; column++) {
                 // crosing
-                this._crossings[row][column] = new Crossing(DIRECTION_NS);
+                this._crossings[row][column] = new Crossing(DIRECTION_NS, this.road_parts_count);
                 this._crossings[row][column].row = row;
                 this._crossings[row][column].column = column;
                 

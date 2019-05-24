@@ -17,6 +17,7 @@ class Controller {
             this.lights_counter = 0;
             this.facade.lights_change();
         } 
+        this.facade.to_lights_change(this.lights_change - this.lights_counter);
 
         this.facade.perform_step();
         this.draw();
