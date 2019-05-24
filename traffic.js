@@ -4,9 +4,11 @@ const DIRECTION_EW = 2;
 // =============== CAR ===============
 
 class Car {
-    constructor(velocity) {
+    constructor(velocity, slow_probability, max_speed) {
         this.v_n = velocity;
         this.place = null;
+        this.slow_probability = slow_probability;
+        this.max_speed = max_speed;
     }
 
     step() {
@@ -17,23 +19,25 @@ class Car {
         
         const is_green = this.place.is_crossing_green();
         const to_red = this.place.to_red_lights();
-
-        // console.log('dn', d_n, 'sn', s_n, 'green', is_green, 't', to_red, 'vn', this.v_n);
-        // console.log(this.place);
         
-        // ================ PRZYSPIESZENIE =================
-        var v_n_new = this.v_n + 1;
+        var v_n_new = this.v_n;
+        // ================== PRZYSPIESZENIE ==============
+        if (v_n_new < this.max_speed) {
+            v_n_new += 1;
+        }
 
-        // ================ ZWALNIANIE =====================
+        // ================== ZWALNIANIE ==================
         if (!is_green) {
-            // ============= CZRWONE =======================
+
+        // ------------------ CZRWONE ---------------------
             const min_d_s = Math.min(d_n, s_n);
             if (min_d_s <= v_n_new) {
                 v_n_new = min_d_s - 1;
             }
 
         } else {
-            // ============= ZIELONE =======================
+        
+        // ------------------ ZIELONE ---------------------
             const min_v_d = Math.min(v_n_new, d_n - 1);
             if (d_n < s_n && d_n < v_n_new) {
                 v_n_new = d_n - 1;
@@ -41,63 +45,14 @@ class Car {
                 v_n_new = min_v_d;
             }
         }
-
-        if (v_n_new == -1) {
-            console.log('v_n', v_n_new);
-            console.log('dn', d_n, 'sn', s_n, 'green', is_green, 't', to_red, 'vn', this.v_n);
-
-            const vn = this.v_n + 1;
-            if (!is_green) {
-                const min_d_s = Math.min(d_n, s_n);
-                console.log(Math.min(d_n, s_n), min_d_s <= vn);
-            } else {
-                const min_v_d = Math.min(vn, d_n - 1);
-                console.log(Math.min(vn, d_n - 1), (d_n < s_n && d_n < vn), (d_n >= s_n && min_v_d * to_red > s_n));
-            }
+        
+        // ================== LOSOWANIE ===================
+        if (v_n_new > 0 && Math.random() < this.slow_probability) {
+            v_n_new -= 1;
         }
 
-        // if (is_green) {
-        //     // =================== GREEN ===================
-        //     const min_v_d = Math.min(this.v_n, d_n - 1);
-        //     console.log('green', min_v_d, this.v_n, d_n - 1);
-
-        //     if (d_n < s_n && d_n <= this.v_n) {
-        //         v_n_new = d_n - 1;
-        //         console.log('green1: ', v_n_new);
-                
-        //     } else if (d_n >= s_n && min_v_d * to_red > s_n) {
-        //         v_n_new = min_v_d;
-        //         console.log('green2: ', v_n_new);
-
-        //     } else {
-        //         // przyspieszenie
-        //         v_n_new += 1;
-        //         console.log('green3: ', v_n_new);
-        //     }
-
-        // } else {
-        //     // ===================== RED =====================
-        //     const min_d_s = Math.min(d_n, s_n);
-        //     console.log('red: ', min_d_s, d_n, s_n, this.v_n);
-        //     if (min_d_s <= this.v_n) {
-        //         // zwolnienie przed światłami
-
-        //         v_n_new = min_d_s - 1;
-        //         console.log('red1: ', v_n_new);
-
-        //     // } else if () {
-
-        //     }
-        //     else {
-        //         // przyspieszenie
-        //         // v_n_new += 1;
-        //         console.log('red2: ', v_n_new);
-        //     }
-
-        // }
-
+        // ================== RUCH ========================
         this.v_n = v_n_new;
-        // console.log('v_n', v_n_new);
         this.place.set_next_car(self, this.v_n);
     }
 
@@ -279,12 +234,14 @@ class Crossing {
 
 class Facade {
 
-    constructor(crossings_count_ns, crossings_count_ew, road_parts_count, density) {
+    constructor(crossings_count_ns, crossings_count_ew, road_parts_count, density, slow_probability, max_speed) {
 
         this.car_density = density / 100.0;
         this.crossings_count_ew = crossings_count_ew;
         this.crossings_count_ns = crossings_count_ns;
         this.road_parts_count = road_parts_count;
+        this.slow_probability = slow_probability; 
+        this.max_speed = max_speed;
         
         this._construct_crossings();
         this._construct_connections();
@@ -403,7 +360,7 @@ class Facade {
             for (let part_index = 0; part_index < this.road_parts_count; part_index++) {
                 if (Math.random() <= this.car_density) {
                     const velocity = 1;
-                    const car = new Car(velocity);
+                    const car = new Car(velocity, this.slow_probability, this.max_speed);
                     this._roads[road_index].set_car(part_index, car);
                     this._cars.push(car);
                 }

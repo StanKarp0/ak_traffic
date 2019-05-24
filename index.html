@@ -4,8 +4,8 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
-	<script src="https://d3js.org/d3.v4.min.js"></script>
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">	
+	<script src="d3.v4.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="bootstrap.min.css">	
 
 	<style>
 	
@@ -66,9 +66,9 @@
 								<div class="row">
 									<div class="col-3 col-md-3 col-sm-4">Długość drogi: </div>
 									<div class="col-8 col-md-7 col-sm-5"><input type="range" class="form-control-range" 
-										id="road_lenght" value="5" min="3" max="50" 
+										id="road_lenght" value="20" min="3" max="50" 
 										oninput="road_lenght_output.value = road_lenght.value"></div>
-									<div class="col-1 col-md-2 col-sm-3"><output id="road_lenght_output">5</output></div>
+									<div class="col-1 col-md-2 col-sm-3"><output id="road_lenght_output">20</output></div>
 								</div>
 
 								<div class="row">
@@ -90,15 +90,15 @@
 								<div class="row">
 									<div class="col-3 col-md-3 col-sm-4">Gęstość aut: </div>
 									<div class="col-8 col-md-7 col-sm-5"><input type="range" class="form-control-range" 
-										id="density" value="5" min="0" max="100" 
+										id="density" value="10" min="0" max="99" 
 										oninput="density_output.value = density.value"></div>
-									<div class="col-1 col-md-2 col-sm-3"><output id="density_output">5</output></div>
+									<div class="col-1 col-md-2 col-sm-3"><output id="density_output">10</output></div>
 								</div>
 
 								<div class="row">
 									<div class="col-3 col-md-3 col-sm-4">P. zwolnienia: </div>
 									<div class="col-8 col-md-7 col-sm-5"><input type="range" class="form-control-range" 
-										id="prob" value="50" min="0" max="100" 
+										id="prob" value="20" min="0" max="100" 
 										oninput="prob_output.value = prob.value"></div>
 									<div class="col-1 col-md-2 col-sm-3"><output id="prob_output">20</output></div>
 								</div>
@@ -106,9 +106,9 @@
 								<div class="row">
 									<div class="col-3 col-md-3 col-sm-4">Okres świateł: </div>
 									<div class="col-8 col-md-7 col-sm-5"><input type="range" class="form-control-range" 
-										id="lights" value="5" min="1" max="100" 
+										id="lights" value="10" min="1" max="30" 
 										oninput="lights_output.value = lights.value"></div>
-									<div class="col-1 col-md-2 col-sm-3"><output id="lights_output">5</output></div>
+									<div class="col-1 col-md-2 col-sm-3"><output id="lights_output">10</output></div>
 								</div>
 
 								<div class="row">
@@ -128,8 +128,8 @@
 	</div>
 	
 
-	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>	
+	<script src="jquery-3.3.1.slim.min.js"></script>
+    <script src="popper.min.js"></script>
+	<script src="bootstrap.min.js"></script>	
 </body>
 </html>

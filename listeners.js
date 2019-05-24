@@ -6,7 +6,7 @@ function onLoad() {
     const ns_roads = parseInt(document.getElementById("ns_roads").value, 10);
     const ew_roads = parseInt(document.getElementById("ew_roads").value, 10);
     const density = parseInt(document.getElementById("density").value, 10);
-    const prob = parseInt(document.getElementById("prob").value, 10);
+    const prob = parseInt(document.getElementById("prob").value, 10) / 100;
     const lights = parseInt(document.getElementById("lights").value, 10);
     const max_speed = parseInt(document.getElementById("max_speed").value, 10);
 
@@ -16,7 +16,7 @@ function onLoad() {
     }
     
     // configure new components
-    const facade = new Facade(ns_roads, ew_roads, road_lenght, density);
+    const facade = new Facade(ns_roads, ew_roads, road_lenght, density, prob, max_speed);
     const view = new View(facade, "#grid");
     const controller = new Controller(facade, view, 200, lights);
     
