@@ -1,9 +1,10 @@
 class View {
 
-    constructor(facade, grid_name) {
+    constructor(facade, grid_name, delay) {
         // constans
         this.img_size = 500;
         this.click = 0;
+        this.delay = delay;
 
         // components
         this.facade = facade;
@@ -53,6 +54,8 @@ class View {
             .attr("class","square_car")
             .attr("x", 0)
             .attr("y", 0)
+            .attr("box_x", 0)
+            .attr("box_y", 0)
             .attr("width", this.box_width)
             .attr("height", this.box_height)
             .attr("id", function(d) {return "car" + d.car;});
@@ -74,10 +77,89 @@ class View {
         const data = this._calculate_car_data();
         for (let key in data) {
             const box = data[key];
-            this._grid.select("#car" + key)
-                .attr("x", box.x * this.box_width)
-                .attr("y", box.y * this.box_height)
+            const car = this._grid.select("#car" + key);
+
+            const box_x_old = car.attr('box_x');
+            const box_y_old = car.attr('box_y');
+
+            const x = box.x * this.box_width;
+            const y = box.y * this.box_height;
+
+            car                  
+                .attr("box_x", box.x)
+                .attr("box_y", box.y)
+
+
+            if (box_x_old < box.x || box_y_old < box.y) {
+                car.transition()
+                    .ease(d3.easeLinear)
+                    .duration(this.delay)
+                    .attr("x", x)
+                    .attr("y", y)
+            } else if (box_x_old > box.x) {
+                
+                const part1 = this.columns_count - box_x_old;
+                const part2 = box.x;
+                const v = (this.delay + 1) / (part1 + part2);
+
+                const delay1 = v * part1;
+                const delay2 = v * part2;
+
+                car.transition()
+                .ease(d3.easeLinear)
+                .duration(delay1)
+                .attr("x", this.img_size)
+                .attr("y", y)
+                .on("end", function() {
+                    car
+                    .attr("opacity", 0)
+                    car
+                    .attr("x", 0)
+                    .attr("y", y)
+                    car
+                    .transition()
+                    .ease(d3.easeLinear)
+                    .duration(delay2)
+                    .attr("x", x)
+                    .attr("y", y)    
+                    car
+                    .attr("opacity", 1)
+                })
+                    
+            } else if (box_y_old > box.y) {
+                const part1 = this.rows_count - box_y_old;
+                const part2 = box.y;
+                const v = (this.delay + 1) / (part1 + part2);
+
+                const delay1 = v * part1;
+                const delay2 = v * part2;
+
+                
+
+                car.transition()
+                .ease(d3.easeLinear)
+                .duration(delay1)
+                .attr("x", x)
+                .attr("y", this.img_size)
+                .on("end", function() {
+                    car
+                    .attr("opacity", 0)
+                    car
+                    .attr("x", x)
+                    .attr("y", 0)
+                    car
+                    .transition()
+                    .ease(d3.easeLinear)
+                    .duration(delay2)
+                    .attr("x", x)
+                    .attr("y", y)      
+                    car
+                    .attr("opacity", 1)  
+                    
+                }) 
+            }
         }
+        
     }
 
     draw_lights() {

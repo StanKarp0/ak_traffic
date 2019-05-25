@@ -9,6 +9,7 @@ function onLoad() {
     const prob = parseInt(document.getElementById("prob").value, 10) / 100;
     const lights = parseInt(document.getElementById("lights").value, 10);
     const max_speed = parseInt(document.getElementById("max_speed").value, 10);
+    const delay = 200;
 
     // old animation turning off
     if(startElement.controller) {
@@ -17,8 +18,8 @@ function onLoad() {
     
     // configure new components
     const facade = new Facade(ns_roads, ew_roads, road_lenght, density, prob, max_speed);
-    const view = new View(facade, "#grid");
-    const controller = new Controller(facade, view, 200, lights);
+    const view = new View(facade, "#grid", delay);
+    const controller = new Controller(facade, view, delay, lights);
     
     startElement.controller = controller;
     startElement.innerHTML = "Start"
