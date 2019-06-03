@@ -10,7 +10,6 @@
 	<style>
 	
 	.square_car {
-		fill: blue;
 		stroke: black;
 	}
 
@@ -74,25 +73,25 @@
 								<div class="row">
 									<div class="col-3 col-md-3 col-sm-4">Pionowych ulic: </div>
 									<div class="col-8 col-md-7 col-sm-5"><input type="range" class="form-control-range" 
-										id="ns_roads" value="2" min="1" max="6" 
+										id="ns_roads" value="1" min="1" max="6" 
 										oninput="ns_roads_output.value = ns_roads.value"></div>
-									<div class="col-1 col-md-2 col-sm-3"><output id="ns_roads_output">2</output></div>
+									<div class="col-1 col-md-2 col-sm-3"><output id="ns_roads_output">1</output></div>
 								</div>
 
 								<div class="row">
 									<div class="col-3 col-md-3 col-sm-4">Poziomych ulic: </div>
 									<div class="col-8 col-md-7 col-sm-5"><input type="range" class="form-control-range" 
-										id="ew_roads" value="2" min="1" max="6" 
+										id="ew_roads" value="1" min="1" max="6" 
 										oninput="ew_roads_output.value = ew_roads.value"></div>
-									<div class="col-1 col-md-2 col-sm-3"><output id="ew_roads_output">2</output></div>
+									<div class="col-1 col-md-2 col-sm-3"><output id="ew_roads_output">1</output></div>
 								</div>
 
 								<div class="row">
 									<div class="col-3 col-md-3 col-sm-4">Gęstość aut: </div>
 									<div class="col-8 col-md-7 col-sm-5"><input type="range" class="form-control-range" 
-										id="density" value="10" min="0" max="99" 
+										id="density" value="30" min="0" max="99" 
 										oninput="density_output.value = density.value"></div>
-									<div class="col-1 col-md-2 col-sm-3"><output id="density_output">10</output></div>
+									<div class="col-1 col-md-2 col-sm-3"><output id="density_output">30</output></div>
 								</div>
 
 								<div class="row">
@@ -106,7 +105,7 @@
 								<div class="row">
 									<div class="col-3 col-md-3 col-sm-4">Okres świateł: </div>
 									<div class="col-8 col-md-7 col-sm-5"><input type="range" class="form-control-range" 
-										id="lights" value="10" min="1" max="30" 
+										id="lights" value="25" min="5" max="50" 
 										oninput="lights_output.value = lights.value"></div>
 									<div class="col-1 col-md-2 col-sm-3"><output id="lights_output">10</output></div>
 								</div>

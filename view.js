@@ -1,3 +1,12 @@
+function getRandomColor() {
+    var letters = '23456789ABCDE';
+    var color = '#';
+    for (var i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * letters.length)];
+    }
+    return color;
+  }
+
 class View {
 
     constructor(facade, grid_name, delay) {
@@ -36,6 +45,17 @@ class View {
         
         const self = this;
         
+        // remain text
+        this._grid.selectAll(".remain")
+                        .data([{}])
+                        .enter().append("text")
+                        .text("L:" + facade.remain)
+                        .attr("x", 0)
+                        .attr("y", 20)
+                        .attr("font-family", "sans-serif")
+                        .attr("font-size", "20px")
+                        .attr("id", "remain");
+
         // background data
         this._grid.selectAll(".square_empty")
             .data(this._calculate_background_data())
@@ -52,12 +72,14 @@ class View {
             .data(this._calculate_car_init_data())
             .enter().append("rect")
             .attr("class","square_car")
+            .attr("fill", function(d) {return getRandomColor()})
             .attr("x", 0)
             .attr("y", 0)
             .attr("box_x", 0)
             .attr("box_y", 0)
             .attr("width", this.box_width)
             .attr("height", this.box_height)
+            .attr("text", function(d) {return d.car;})
             .attr("id", function(d) {return "car" + d.car;});
 
         // crossings lights
@@ -85,9 +107,18 @@ class View {
             const x = box.x * this.box_width;
             const y = box.y * this.box_height;
 
+            // car                  
+            //     .attr("box_x", box.x)
+            //     .attr("box_y", box.y)
+            //     .attr("x", x)
+            //     .attr("y", y)
+
+
             car                  
                 .attr("box_x", box.x)
                 .attr("box_y", box.y)
+                // .attr("x", x)
+                // .attr("y", y)
 
 
             if (box_x_old < box.x || box_y_old < box.y) {
@@ -134,8 +165,6 @@ class View {
                 const delay1 = v * part1;
                 const delay2 = v * part2;
 
-                
-
                 car.transition()
                 .ease(d3.easeLinear)
                 .duration(delay1)
@@ -170,6 +199,7 @@ class View {
                 .attr("fill", box.dir ? "#00ff00" : "#ff0000")
 
         }
+        this._grid.select("#remain").text("L:" + this.facade.remain)
     }
 
     _calculate_car_init_data() {

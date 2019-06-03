@@ -39,13 +39,13 @@ class Car {
         
         // ------------------ ZIELONE ---------------------
             const min_v_d = Math.min(v_n_new, d_n - 1);
-            if (d_n < s_n && d_n < v_n_new) {
+            if (d_n < s_n && d_n <= v_n_new) {
                 v_n_new = d_n - 1;
             } else if (d_n >= s_n && min_v_d * to_red > s_n) {
                 v_n_new = min_v_d;
             }
         }
-        
+
         // ================== LOSOWANIE ===================
         if (v_n_new > 0 && Math.random() < this.slow_probability) {
             v_n_new -= 1;
@@ -67,6 +67,7 @@ class RoadPart {
         this.car = null;
         this.next_car = null;
 
+        this._cached_to_next_car = null;
         this._cached_is_green = null;
         this._cached_to_red_light = null;
     }
@@ -92,6 +93,7 @@ class RoadPart {
         }
         this._cached_is_green = null;
         this._cached_to_red_light = null;
+        this._cached_to_next_car = null;
     }
 
     has_car() {
@@ -99,7 +101,9 @@ class RoadPart {
     }
 
     count_to_next_car() {
-        return this.next_part.has_car() ? 0: this.next_part.count_to_next_car() + 1; 
+        if (this._cached_to_next_car == null)
+            this._cached_to_next_car = this.next_part.has_car() ? 0: this.next_part.count_to_next_car() + 1; 
+        return this._cached_to_next_car;
     }
 
     is_crossing_green() {
@@ -234,7 +238,7 @@ class Crossing {
 
 class Facade {
 
-    constructor(crossings_count_ns, crossings_count_ew, road_parts_count, density, slow_probability, max_speed) {
+    constructor(crossings_count_ns, crossings_count_ew, road_parts_count, density, slow_probability, max_speed, lights_time) {
 
         this.car_density = density / 100.0;
         this.crossings_count_ew = crossings_count_ew;
@@ -242,6 +246,7 @@ class Facade {
         this.road_parts_count = road_parts_count;
         this.slow_probability = slow_probability; 
         this.max_speed = max_speed;
+        this.remain = lights_time;
         
         this._construct_crossings();
         this._construct_connections();
@@ -286,6 +291,7 @@ class Facade {
     }
 
     to_lights_change(remain) {
+        this.remain = remain;
         for (let row = 0; row < this._crossings.length; row++) {
             for (let column = 0; column < this._crossings[row].length; column++) {
                 this._crossings[row][column].to_lights_change(remain)
