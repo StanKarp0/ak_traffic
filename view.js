@@ -5,19 +5,20 @@ function getRandomColor() {
       color += letters[Math.floor(Math.random() * letters.length)];
     }
     return color;
-  }
+}
 
 class View {
 
-    constructor(facade, grid_name, delay) {
+    constructor(facade, grid_name, chart_name, delay) {
         // constans
-        this.img_size = 500;
+        this.img_size = 800;
         this.click = 0;
         this.delay = delay;
 
         // components
         this.facade = facade;
         this.grid_name = grid_name;
+        this.chart_name = chart_name;
 
         // helpers
         this.ns_count = facade.crossings_count_ns;
@@ -93,6 +94,72 @@ class View {
             .attr("height", function(d) { return d.h * self.box_height; })
             .attr("fill", function(d) { return d.dir ? "#00ff00" : "#ff0000"; })
             .attr("id", function(d) {return d.id;});
+
+        // =============== CHART ====================
+        
+        d3.select(this.chart_name).html("");
+
+        // chart position
+        var margin = {top: 10, right: 30, bottom: 60, left: 60};
+        this.chart_width = 560 - margin.left - margin.right;
+        this.chart_height = 300 - margin.top - margin.bottom;
+
+        // chart definition
+        this._chart = d3.select(this.chart_name)
+            .append("svg")
+                .attr("width", this.chart_width + margin.left + margin.right)
+                .attr("height", this.chart_height + margin.top + margin.bottom)
+            .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+            .style("display", "block")
+            .style("margin", "auto");
+
+        // Add X axis
+        this._chart.append("g")
+            .attr("class", "xaxis")
+            .attr("transform", "translate(0," + this.chart_height + ")");
+        // Add Y axis
+        this._chart.append("g")
+            .attr("class", "yaxis");
+        // Add the line
+        this._chart.append("path")
+            .attr("fill", "none")
+            .attr("stroke", "steelblue")
+            .attr("stroke-width", 1.5)
+            .attr("id", "linens");
+        this._chart.append("path")
+            .attr("fill", "none")
+            .attr("stroke", "red")
+            .attr("stroke-width", 1.5)
+            .attr("id", "lineew");
+
+        this._draw_chart([]);
+
+        // ============== CHART LEGEND =============
+        const keys = {ns: {tr: "Północ-Południe", color: "steelblue"}, ew: {tr: "Wschód-Zachód", color: "red"}};
+        
+        // Add one dot in the legend for each name.
+        this._chart.selectAll("mydots")
+          .data(Object.keys(keys))
+          .enter()
+          .append("circle")
+            .attr("cx", function(d,i){ return 10 + i*150})
+            .attr("cy", this.chart_height + margin.bottom / 2) // 100 is where the first dot appears. 25 is the distance between dots
+            .attr("r", 7)
+            .style("fill", function(d){ return keys[d]['color']})
+        
+        // Add one dot in the legend for each name.
+        this._chart.selectAll("mylabels")
+          .data(Object.keys(keys))
+          .enter()
+          .append("text")
+            .attr("x", function(d,i){ return 20 + i*150})
+            .attr("y", this.chart_height + margin.bottom / 2) // 100 is where the first dot appears. 25 is the distance between dots
+            .style("fill", function(d){ return keys[d]['color']})
+            .text(function(d){ return keys[d]['tr']})
+            .attr("text-anchor", "left")
+            .style("alignment-baseline", "middle")
+
     }
 
     draw_cars() {
@@ -200,6 +267,48 @@ class View {
 
         }
         this._grid.select("#remain").text("L:" + this.facade.remain)
+    }
+
+    _draw_chart(data) {
+        // Define X axis
+        const x_axis = d3.scaleLinear()
+            .domain([this.facade.history_first, this.facade.index])
+            .range([ 0, this.chart_width]);
+        // Define Y axis      
+        const y_axis = d3.scaleLinear()
+            .domain([0, d3.max(data, function(d) {return Math.max(d.ns, d.ew);})])
+            .range([this.chart_height, 0 ]);
+        // Define Line
+        const line_ns = d3.line()
+            .x(function(d) { return x_axis(d.x) })
+            .y(function(d) { return y_axis(d.ns) })
+        const line_ew = d3.line()
+            .x(function(d) { return x_axis(d.x) })
+            .y(function(d) { return y_axis(d.ew) })
+
+        // Changing X axis
+        this._chart.select(".xaxis")
+            .transition(this.delay)
+            .call(d3.axisBottom(x_axis));
+        // Changing Y axis
+        this._chart.select(".yaxis")
+            .transition(this.delay)
+            .call(d3.axisLeft(y_axis));
+
+        this._chart.select("#linens")
+            .datum(data)
+            // .transition(this.delay)
+            .attr("d", line_ns)
+        this._chart.select("#lineew")
+            .datum(data)
+            // .transition(this.delay)
+            .attr("d", line_ew)
+
+    }
+
+    draw_chart() {
+        const data = this.facade.queue.values;
+        this._draw_chart(data);
     }
 
     _calculate_car_init_data() {

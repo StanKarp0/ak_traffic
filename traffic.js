@@ -4,11 +4,12 @@ const DIRECTION_EW = 2;
 // =============== CAR ===============
 
 class Car {
-    constructor(velocity, slow_probability, max_speed) {
+    constructor(velocity, slow_probability, max_speed, direction) {
         this.v_n = velocity;
         this.place = null;
         this.slow_probability = slow_probability;
         this.max_speed = max_speed;
+        this.direction = direction;
     }
 
     step() {
@@ -234,6 +235,32 @@ class Crossing {
     }
 }
 
+// ================ QUEUE ===============
+class MaxQueue {
+
+    constructor(limit) {
+        this.limit = limit;
+        this.values = []
+        this.iteration = 0;
+    }
+
+    push(value) {
+        if (this.values.length >= this.limit)
+            this.values.shift();
+        this.values.push(value);
+        this.iteration += 1;
+    }
+
+    get(index) {
+        return this.values[index];
+    }
+
+    get lenght() {
+        return this.values.length
+    }
+}
+
+
 // =============== FACADE ===============
 
 class Facade {
@@ -247,10 +274,35 @@ class Facade {
         this.slow_probability = slow_probability; 
         this.max_speed = max_speed;
         this.remain = lights_time;
+
+        this.history = 100;
+        this.index = 0;
+        this.queue = new MaxQueue(this.history);
         
         this._construct_crossings();
         this._construct_connections();
         this._addCars();
+    }
+
+    get history_first() {
+        return Math.max(0, this.index - this.history);
+    }
+
+    get_average_speed() {
+        var ns = 0, ew = 0, ns_cnt = 0, ew_cnt = 0;
+        for (let car_id = 0; car_id < this._cars.length; car_id++) {
+            const car = this._cars[car_id];
+            if (car.direction == DIRECTION_EW) {
+                ew += car.v_n; ew_cnt += 1;
+            } else {
+                ns += car.v_n; ns_cnt += 1;
+            }
+        }
+        return {
+            x: this.index,
+            ns: ns_cnt > 0 ? ns / ns_cnt : 0,
+            ew: ew_cnt > 0 ? ew / ew_cnt : 0
+        }
     }
 
     get_car_road_part(road_index, road_part_index) {
@@ -314,6 +366,9 @@ class Facade {
             }
         }
 
+        this.queue.push(this.get_average_speed());
+
+        this.index += 1;
     }
 
     _construct_crossings() {
@@ -366,8 +421,9 @@ class Facade {
             for (let part_index = 0; part_index < this.road_parts_count; part_index++) {
                 if (Math.random() <= this.car_density) {
                     const velocity = 1;
-                    const car = new Car(velocity, this.slow_probability, this.max_speed);
-                    this._roads[road_index].set_car(part_index, car);
+                    const road = this._roads[road_index];
+                    const car = new Car(velocity, this.slow_probability, this.max_speed, road.direction);
+                    road.set_car(part_index, car);
                     this._cars.push(car);
                 }
             }

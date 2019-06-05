@@ -26,6 +26,7 @@ class Controller {
     draw() {
         this.view.draw_cars();
         this.view.draw_lights();
+        this.view.draw_chart();
     }
 
     animate() {
