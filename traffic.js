@@ -4,7 +4,8 @@ const DIRECTION_EW = 2;
 // =============== CAR ===============
 
 class Car {
-    constructor(velocity, slow_probability, max_speed, direction) {
+    constructor(car_id, velocity, slow_probability, max_speed, direction) {
+        this.car_id = car_id;
         this.v_n = velocity;
         this.place = null;
         this.slow_probability = slow_probability;
@@ -22,35 +23,46 @@ class Car {
         const to_red = this.place.to_red_lights();
         
         var v_n_new = this.v_n;
+        // console.log(this);
+        // console.log(this.car_id, this.place.road_part_id, '0.', v_n_new, 'dn', d_n, 'sn', s_n, 'green', is_green, 'red', to_red);
         // ================== PRZYSPIESZENIE ==============
         if (v_n_new < this.max_speed) {
             v_n_new += 1;
         }
+        // console.log(this.car_id, this.place.road_part_id, '1.', v_n_new);
 
         // ================== ZWALNIANIE ==================
         if (!is_green) {
 
         // ------------------ CZRWONE ---------------------
             const min_d_s = Math.min(d_n, s_n);
+            // console.log(this.car_id, this.place.road_part_id, '2.', v_n_new, 'minds', min_d_s);
             if (min_d_s <= v_n_new) {
                 v_n_new = min_d_s - 1;
+                // console.log(this.car_id, this.place.road_part_id, '3.', v_n_new);
             }
 
         } else {
         
         // ------------------ ZIELONE ---------------------
             const min_v_d = Math.min(v_n_new, d_n - 1);
-            if (d_n < s_n && d_n <= v_n_new) {
+            // console.log(this.car_id, this.place.road_part_id, '4.', d_n, s_n, '&&', d_n, v_n_new);
+            if (d_n <= s_n && d_n <= v_n_new) {
                 v_n_new = d_n - 1;
+                // console.log(this.car_id, this.place.road_part_id, '5.', v_n_new, d_n, s_n, '&&', d_n, v_n_new);
             } else if (d_n >= s_n && min_v_d * to_red > s_n) {
                 v_n_new = min_v_d;
+                // console.log(this.car_id, this.place.road_part_id, '6.', v_n_new, d_n, s_n, '&&', min_v_d, to_red, s_n);
             }
         }
 
         // ================== LOSOWANIE ===================
         if (v_n_new > 0 && Math.random() < this.slow_probability) {
+            // console.log(this.car_id, this.place.road_part_id, '7.', v_n_new);
             v_n_new -= 1;
         }
+
+        // console.log(this.car_id, this.place.road_part_id, '8.', v_n_new);
 
         // ================== RUCH ========================
         this.v_n = v_n_new;
@@ -60,10 +72,13 @@ class Car {
 }
 
 // =============== BASIC ROAD PARTS ===============
-
+var road_part_id = 0;
 class RoadPart {
 
     constructor() {
+        this.road_part_id = road_part_id;
+        road_part_id += 1;
+
         this.next_part = null;
         this.car = null;
         this.next_car = null;
@@ -87,7 +102,7 @@ class RoadPart {
 
     aprove_step() {
         this.car = this.next_car;
-        if (this.car) {
+        if (this.car != null) {
             const self = this;
             this.car.place = self;
             this.next_car = null;
@@ -142,6 +157,10 @@ class CrossingEntry extends RoadPart {
             return this.crossing.remain_to_red_ew;
         }
         return 0;
+    }
+
+    has_car() {
+        return this.car != null || this.crossing.other_entry(this.direction).car != null;
     }
 }
 
@@ -233,6 +252,14 @@ class Crossing {
             this.remain_to_red_ew = remain;
         }
     }
+
+    other_entry(direction) {
+        if (direction == DIRECTION_EW) {
+            return this.crossing_entry_ns;
+        } else {
+            return this.crossing_entry_ew;
+        }
+    }
 }
 
 // ================ QUEUE ===============
@@ -307,13 +334,13 @@ class Facade {
 
     get_car_road_part(road_index, road_part_index) {
         const car = this._roads[road_index].get_car_road_part(road_part_index);
-        return car != null ? this._cars.indexOf(car) : null;
+        return car != null ? car.car_id : null;
     }
 
     get_car_crossing(crossing_row, crossing_column) {
         const crossing = this._crossings[crossing_row][crossing_column];
         const car = crossing.get_car();
-        return car != null ? this._cars.indexOf(car) : null;
+        return car != null ? car.car_id : null;
     }
 
     get_road_index(crossing_row, crossing_column, direction) {
@@ -417,14 +444,16 @@ class Facade {
 
     _addCars() {
         this._cars = [];
+        var car_id = 0;
         for (let road_index = 0; road_index < this._roads.length; road_index++) {
             for (let part_index = 0; part_index < this.road_parts_count; part_index++) {
                 if (Math.random() <= this.car_density) {
                     const velocity = 1;
                     const road = this._roads[road_index];
-                    const car = new Car(velocity, this.slow_probability, this.max_speed, road.direction);
+                    const car = new Car(car_id, velocity, this.slow_probability, this.max_speed, road.direction);
                     road.set_car(part_index, car);
                     this._cars.push(car);
+                    car_id += 1;
                 }
             }
         }
